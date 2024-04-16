@@ -26,19 +26,20 @@ public class ProductManagement {
     return catalog.stream()
         .filter(p -> p.getType() == type && p.getPrice() != null)
         .min(Comparator.comparing(Product::getPrice))
-        .orElseThrow(() -> new RuntimeException("No product found"));
+        .orElseThrow(() -> new RuntimeException("No " + type + " products found"));
   }
 
   public List<Product> applyDiscounts() {
     return catalog.stream()
+        .filter(product -> product.getType() == ProductType.BOOK)
         .filter(product -> product.getDiscount() != null && product.getDiscount().compareTo(BigDecimal.ZERO) > 0)
         .map(product -> product.withPrice(calcDiscount(product)))
         .toList();
   }
 
   private BigDecimal calcDiscount(Product product) {
-    return product.getPrice().multiply(BigDecimal.ONE.subtract(product.getDiscount()
-        .divide(BigDecimal.valueOf(100), 2, RoundingMode.FLOOR)));
+    return product.getPrice().subtract(product.getDiscount().multiply(product.getPrice())
+        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
   }
 
   public List<Product> getLastThreeProducts() {
@@ -62,10 +63,6 @@ public class ProductManagement {
     return catalog.stream()
         .collect(Collectors.groupingBy(Product::getType));
   }
-
-
-
-
 
   ProductManagement() {
     addProduct(new Product()
